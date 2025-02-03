@@ -15,9 +15,12 @@ public class Schedule
             new ConsoleUI().CreationError(schedule);
     }
 
-    public List<Meeting> GetMeetings(Schedule schedule)
+    public List<Meeting> GetMeetings(Schedule schedule, DateOnly choosenDate)
     {
-        return meetings;
+        var choosenMeetings = new List<Meeting>();
+        choosenMeetings = meetings.Where(meetings => DateOnly.FromDateTime(meetings.StartTime.Date) == choosenDate)
+            .ToList();
+        return choosenMeetings;
     }
 
     public Meeting GetMeeting(Schedule schedule, int id)
