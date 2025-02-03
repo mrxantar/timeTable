@@ -1,37 +1,59 @@
 namespace timeTable;
 
-public class ConsoleUI ()
+public class ConsoleUI (Schedule schedule)
 {
-    public void MainMenuUI(Schedule schedule)
+    public void PressAnyKey()
     {
-        Console.Clear();
-        Console.WriteLine("Приложение управления встречами. Выберите опцию с помощью клавиш с цифрами:");
-        Console.WriteLine("1. Создать встречу");
-        Console.WriteLine("2. Посмотреть все встречи за конкретную дату");
-        Console.WriteLine("9. Закрыть приложение");
+        Console.WriteLine("Нажмите любую клавишу для продолжения");
         Console.Write(">>");
-        var keyInput = Console.ReadKey();
-
-        switch (keyInput.Key)
-        {
-            case ConsoleKey.D1:
-                CreationUI(schedule);
-                break;
-            case ConsoleKey.D2:
-                ChooseDate(schedule);
-                break;
-            case ConsoleKey.D9:
-                return;
-            default:
-                Console.Clear();
-                Console.WriteLine("Такой опции не существует. Попробуйте снова");
-                Thread.Sleep(3000);
-                MainMenuUI(schedule);
-                break;
-        }
+        Console.ReadKey();
     }
 
-    public void CreationUI(Schedule schedule)
+    public void MainMenuUI()
+    {
+        while (true)
+        {
+            Console.Clear();
+            Console.WriteLine("Приложение управления встречами. Выберите опцию с помощью клавиш с цифрами:");
+            Console.WriteLine("1. Создать встречу");
+            Console.WriteLine("2. Посмотреть все встречи за конкретную дату");
+            Console.WriteLine("9. Закрыть приложение");
+            Console.Write(">>");
+            var keyInput = Console.ReadKey();
+
+            switch (keyInput.Key)
+            {
+                case ConsoleKey.D1:
+                    if (schedule.AddMeeting(DateTimeMeetingUI()))
+                    {
+                        CreationSuccess();
+                        MainMenuUI();
+                    }
+                    else
+                    {
+                        CreationError();
+                        MainMenuUI();
+                    }
+                    break;
+            
+                case ConsoleKey.D2:
+                    ChooseDate();
+                    break;
+            
+                case ConsoleKey.D9:
+                    return;
+            
+                default:
+                    Console.Clear();
+                    Console.WriteLine("Такой опции не существует. Попробуйте снова");
+                    Thread.Sleep(3000);
+                    continue;
+            }
+        }
+        
+    }
+
+    public Meeting DateTimeMeetingUI()
     {
         DateTime startTime;
         DateTime endTime;
@@ -40,28 +62,25 @@ public class ConsoleUI ()
         {
             Console.Clear();
             Console.WriteLine("Укажите дату и время начала встречи");
-            Console.WriteLine("в формате дд:мм:гггг чч:мм");
+            Console.WriteLine("в формате дд.мм.гггг чч:мм");
             Console.Write(">>");
             if (DateTime.TryParse(Console.ReadLine(), out startTime))
                 break;
             Console.WriteLine("Неправильно введена дата, попробуйте снова.");
-            Console.WriteLine("Нажмите любую клавишу для продолжения");
-            Console.ReadKey();
+            PressAnyKey();
         }
 
         while (true)
         {
             Console.Clear();
             Console.WriteLine("Укажите дату и время конца встречи встречи");
-            Console.WriteLine("в формате дд:мм:гггг чч:мм");
+            Console.WriteLine("в формате дд.мм.гггг чч:мм");
             Console.Write(">>");
             if (DateTime.TryParse(Console.ReadLine(), out endTime))
                 break;
             
             Console.WriteLine("Неправильно введена дата, попробуйте снова.");
-            Console.WriteLine("Нажмите любую клавишу для продолжения");
-            Console.Write(">>");
-            Console.ReadKey();
+            PressAnyKey();
         }
 
         while (true)
@@ -76,71 +95,99 @@ public class ConsoleUI ()
             {
                 case "Н":
                     Console.Clear();
-                    schedule.AddMeeting(startTime, endTime, schedule);
-                    Thread.Sleep(3000);
-                    MainMenuUI(schedule);
-                    break;
+                    var bufferMeeting = new Meeting(startTime, endTime);
+                    return bufferMeeting;
                 default:
                     if (int.TryParse(input, out notifMin))
                     {
                         Console.Clear();
-                        schedule.AddMeeting(startTime, endTime, schedule, notifMin);
-                        Thread.Sleep(3000);
-                        MainMenuUI(schedule);
-                        break;
+                        var bufferMeetingWithNotif = new Meeting(startTime, endTime, notifMin);
+                        return bufferMeetingWithNotif;
                     }
                     
                     Console.WriteLine("Неправильно введено число, попробуйте снова.");
-                    Console.WriteLine("Нажмите любую клавишу для продолжения");
-                    Console.Write(">>");
-                    Console.ReadKey();
+                    PressAnyKey();
                     continue;
             }
         }
     }
 
-    public void CreationError(Schedule schedule)
+    public void CreationError()
     {
         Console.Clear();
         Console.WriteLine("На это время назначена другая встреча. Новая встреча не была создана.");
-        Console.WriteLine("Нажмите любую клавишу для продолжения");
-        Console.Write(">>");
-        Console.ReadKey();
-        MainMenuUI(schedule);
+        PressAnyKey();
     }
 
-    public void CreationSuccess(Schedule schedule)
+    public void CreationSuccess()
     {
         Console.Clear();
         Console.WriteLine("Встреча успешно добавлена");
-        Console.WriteLine("Нажмите любую клавишу для продолжения");
-        Console.Write(">>");
-        Console.ReadKey();
-        MainMenuUI(schedule);
+        PressAnyKey();
     }
 
-    public void ChooseDate(Schedule schedule)
+    public void CorrectionError()
+    {
+        Console.Clear();
+        Console.WriteLine("На это время назначена другая встреча. Встреча не была изменена.");
+        PressAnyKey();
+    }
+
+    public void CorrectionSuccess()
+    {
+        Console.Clear();
+        Console.WriteLine("Встреча была успешно изменена");
+        PressAnyKey();
+    }
+
+    public void ConfirmDeletion(int id, DateOnly choosenDate, Meeting meeting)
+    {
+        Console.Clear();
+        Console.WriteLine("Вы уверены что хотите удалить эту встречу?");
+        Console.WriteLine("Введите Да/Нет");
+        Console.Write(">>");
+        var input = Console.ReadLine();
+        switch (input)
+        {
+            case "Да":
+                schedule.DeleteMeeting(id);
+                Console.WriteLine("Удаление успешно.");
+                PressAnyKey();
+                ListMeetings(choosenDate);
+                break;
+            case "Нет":
+                MeetingOptions(meeting, choosenDate, id);
+                break;
+            default:
+                Console.WriteLine("Неверный ввод, попробуйте снова");
+                Thread.Sleep(3000);
+                ConfirmDeletion(id, choosenDate, meeting);
+                break;
+        }
+    }
+
+    public void ChooseDate()
     {
         Console.Clear();
         Console.WriteLine("Введите дату, за которую нужно вывести все встречи");
         if (DateOnly.TryParse(Console.ReadLine(), out DateOnly choosenDate))
-            ListMeetings(schedule, choosenDate);
+            ListMeetings(choosenDate);
         else
         {
             Console.WriteLine("Неправильно введена дата, попробуйте снова");
             Thread.Sleep(3000);
-            ChooseDate(schedule);
+            ChooseDate();
         }
     }
 
-    public void ListMeetings(Schedule schedule, DateOnly choosenDate)
+    public void ListMeetings(DateOnly choosenDate)
     {
         Console.Clear();
         Console.WriteLine("Выберите номер встречи, введя её номер");
         Console.WriteLine("Для выбора другой даты, введите Д(ата)");
         Console.WriteLine("Для возвращения в главное меню, введите М(еню)");
         int i = 0;
-        foreach (var meeting in schedule.GetMeetings(schedule, choosenDate))
+        foreach (var meeting in schedule.GetMeetings(choosenDate))
         {
             Console.WriteLine($"{i++}: {meeting.StartTime} - {meeting.EndTime}. Уведомление за: {meeting.Notification} минут");
         }
@@ -150,29 +197,27 @@ public class ConsoleUI ()
         switch (input)
         {
             case "М":
-                MainMenuUI(schedule);
+                MainMenuUI();
                 break;
             case "Д":
-                ChooseDate(schedule);
+                ChooseDate();
                 break;
             default:
                 if (int.TryParse(input, out i))
                 {
-                    var choosenMeeting = schedule.GetMeeting(schedule, i);
-                    MeetingOptions(schedule, choosenMeeting, choosenDate);
+                    var choosenMeeting = schedule.GetMeeting(i);
+                    MeetingOptions(choosenMeeting, choosenDate, i);
                     break;
                 }
                 
                 Console.WriteLine("Такой опции нет. Попробуйте снова");
-                Console.WriteLine("Нажмите любую клавишу для продолжения");
-                Console.Write(">>");
-                Console.ReadKey();
-                ListMeetings(schedule, choosenDate);
+                PressAnyKey();
+                ListMeetings(choosenDate);
                 break;
         }
     }
 
-    public void MeetingOptions(Schedule schedule, Meeting meeting, DateOnly choosenDate)
+    public void MeetingOptions(Meeting meeting, DateOnly choosenDate, int id)
     {
         Console.Clear();
         Console.WriteLine($"Начало встречи:{meeting.StartTime}");
@@ -189,22 +234,36 @@ public class ConsoleUI ()
         switch (input.Key)
         {
             case ConsoleKey.D1:
-                //Изменить встречу
+                if (schedule.CorrectMeeting(DateTimeMeetingUI(), id))
+                {
+                    CorrectionSuccess();
+                    ListMeetings(choosenDate);
+                }
+                else
+                {
+                    CorrectionError();
+                    MeetingOptions(meeting, choosenDate, id);
+                }
                 break;
+            
             case ConsoleKey.D5:
-                //Удалить встречу
+                ConfirmDeletion(id, choosenDate, meeting);
+                break;
+            
             case ConsoleKey.D8:
-                ListMeetings(schedule, choosenDate);
+                ListMeetings(choosenDate);
                 break;
+            
             case ConsoleKey.D9:
-                MainMenuUI(schedule);
+                MainMenuUI();
                 break;
+            
             default:
                 Console.WriteLine("Такой опции нет. Попробуйте снова");
-                Console.WriteLine("Нажмите любую клавишу для продолжения");
-                Console.ReadKey();
-                MeetingOptions(schedule, meeting, choosenDate);
+                PressAnyKey();
+                MeetingOptions(meeting, choosenDate, id);
                 break;
         }
     }
+    
 }

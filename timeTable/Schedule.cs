@@ -4,18 +4,17 @@ public class Schedule
 {
     private List<Meeting> meetings = new List<Meeting>();
 
-    public void AddMeeting(DateTime startTime, DateTime endTime, Schedule schedule, int notification = 0)
+    public bool AddMeeting(Meeting bufferMeeting)
     {
-        if (!meetings.Any(meeting => startTime < meeting.EndTime && endTime > meeting.StartTime))
+        if (!meetings.Any(meeting => bufferMeeting.StartTime < meeting.EndTime && bufferMeeting.EndTime > meeting.StartTime))
         {
-            meetings.Add(new Meeting(startTime, endTime, notification));
-            new ConsoleUI().CreationSuccess(schedule);
+            meetings.Add(bufferMeeting);
+            return true;
         }
-        else
-            new ConsoleUI().CreationError(schedule);
+        return false;
     }
 
-    public List<Meeting> GetMeetings(Schedule schedule, DateOnly choosenDate)
+    public List<Meeting> GetMeetings(DateOnly choosenDate)
     {
         var choosenMeetings = new List<Meeting>();
         choosenMeetings = meetings.Where(meetings => DateOnly.FromDateTime(meetings.StartTime.Date) == choosenDate)
@@ -23,8 +22,25 @@ public class Schedule
         return choosenMeetings;
     }
 
-    public Meeting GetMeeting(Schedule schedule, int id)
+    public Meeting GetMeeting(int id)
     {
         return (meetings[id]);
+    }
+
+    public bool CorrectMeeting(Meeting bufferMeeting, int id)
+    {
+        if (!meetings.Any(meeting => bufferMeeting.StartTime < meeting.EndTime && bufferMeeting.EndTime > meeting.StartTime))
+        {
+            meetings[id].StartTime = bufferMeeting.StartTime;
+            meetings[id].EndTime = bufferMeeting.EndTime;
+            meetings[id].Notification = bufferMeeting.Notification;
+            return true;
+        }
+        return false;
+    }
+
+    public void DeleteMeeting(int id)
+    {
+        meetings.RemoveAt(id);
     }
 }
