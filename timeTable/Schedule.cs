@@ -14,4 +14,14 @@ public class Schedule
         else
             new ConsoleUI().CreationError(schedule);
     }
+
+    public List<Meeting> GetMeetings(Schedule schedule)
+    {
+        return meetings;
+    }
+
+    public Meeting GetMeeting(Schedule schedule, int id)
+    {
+        return (meetings[id]);
+    }
 }
