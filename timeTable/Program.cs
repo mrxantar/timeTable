@@ -4,10 +4,9 @@ using timeTable;
 
 class Program
 {
+    static Schedule schedule = new Schedule();
     public static void Main(string[] args)
     {
-        List<Meeting> meetings = new List<Meeting>();
-        
-        new ConsoleUI().MainMenuUI();
+        new ConsoleUI().MainMenuUI(schedule);
     }
 }

@@ -1,8 +1,8 @@
 namespace timeTable;
 
-public class ConsoleUI
+public class ConsoleUI ()
 {
-    public void MainMenuUI()
+    public void MainMenuUI(Schedule schedule)
     {
         while (true)
         {
@@ -16,10 +16,10 @@ public class ConsoleUI
             switch (keyInput.Key)
             {
                 case ConsoleKey.D1:
-                    CreationUI();
+                    CreationUI(schedule);
                     break;
                 case ConsoleKey.D2:
-                    // ChangeMeeting();
+                    // Вывести все встречи
                     break;
                 case ConsoleKey.D9:
                     break;
@@ -32,7 +32,7 @@ public class ConsoleUI
         }
     }
 
-    public void CreationUI()
+    public void CreationUI(Schedule schedule)
     {
         DateTime startTime;
         DateTime endTime;
@@ -75,19 +75,17 @@ public class ConsoleUI
             {
                 case "Н":
                     Console.Clear();
-                    AddMeeting(startTime, endTime);
-                    Console.WriteLine("Встреча успешно добавлена");
-                    Thread.Sleep(5000);
-                    MainMenuUI();
+                    schedule.AddMeeting(startTime, endTime, schedule);
+                    Thread.Sleep(3000);
+                    MainMenuUI(schedule);
                     break;
                 default:
                     if (int.TryParse(input, out notifMin))
                     {
                         Console.Clear();
-                        var meetingWithNotif = new Meeting(startTime, endTime, notifMin);
-                        Console.WriteLine("Встреча успешно добавлена");
-                        Thread.Sleep(7000);
-                        MainMenuUI();
+                        schedule.AddMeeting(startTime, endTime, schedule, notifMin);
+                        Thread.Sleep(3000);
+                        MainMenuUI(schedule);
                         break;
                     }
                     
@@ -97,5 +95,23 @@ public class ConsoleUI
                     continue;
             }
         }
+    }
+
+    public void CreationError(Schedule schedule)
+    {
+        Console.Clear();
+        Console.WriteLine("На это время назначена другая встреча. Новая встреча не была создана.");
+        Console.WriteLine("Нажмите любую клавишу для продолжения");
+        Console.ReadKey();
+        MainMenuUI(schedule);
+    }
+
+    public void CreationSuccess(Schedule schedule)
+    {
+        Console.Clear();
+        Console.WriteLine("Встреча успешно добавлена");
+        Console.WriteLine("Нажмите любую клавишу для продолжения");
+        Console.ReadKey();
+        MainMenuUI(schedule);
     }
 }
