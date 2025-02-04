@@ -25,12 +25,17 @@ public class Schedule
         return false;
     }
 
-    public List<Meeting> GetMeetings(DateOnly choosenDate)
+    public List<(Meeting Meeting, int Index)> GetMeetings(DateOnly chosenDate)
     {
-        var choosenMeetings = new List<Meeting>();
-        choosenMeetings = meetings.Where(meetings => DateOnly.FromDateTime(meetings.StartTime.Date) == choosenDate)
-            .ToList();
-        return choosenMeetings;
+        var chosenMeetings = new List<(Meeting Meeting, int Index)>();
+        for (int i = 0; i < meetings.Count; i++)
+        {
+            if (DateOnly.FromDateTime(meetings[i].StartTime.Date) == chosenDate)
+            {
+                chosenMeetings.Add((meetings[i], i));
+            }
+        }
+        return chosenMeetings;
     }
 
     public Meeting GetMeeting(int id)
@@ -38,13 +43,14 @@ public class Schedule
         return (meetings[id]);
     }
 
-    public bool CorrectMeeting(Meeting bufferMeeting, int id)
+    public bool CorrectMeeting(Meeting bufferMeeting, int originalIndex)
     {
-        if (!meetings.Any(meeting => bufferMeeting.StartTime < meeting.EndTime && bufferMeeting.EndTime > meeting.StartTime))
+        if (!meetings.Where((meeting, index) => index != originalIndex)
+                .Any(meeting => bufferMeeting.StartTime < meeting.EndTime && bufferMeeting.EndTime > meeting.StartTime))
         {
-            meetings[id].StartTime = bufferMeeting.StartTime;
-            meetings[id].EndTime = bufferMeeting.EndTime;
-            meetings[id].Notification = bufferMeeting.Notification;
+            meetings[originalIndex].StartTime = bufferMeeting.StartTime;
+            meetings[originalIndex].EndTime = bufferMeeting.EndTime;
+            meetings[originalIndex].Notification = bufferMeeting.Notification;
             return true;
         }
         return false;
