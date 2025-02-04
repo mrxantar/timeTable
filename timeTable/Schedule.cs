@@ -63,18 +63,29 @@ public class Schedule
 
     private void CheckNotification(object? sender, ElapsedEventArgs elapsedEventArgs)
     {
-        
+        var notifications = CreateNotifications();
+        foreach (var notification in notifications)
+        {
+            Console.Beep();
+            Console.WriteLine($"Напоминание о встрече: {notification}");
+        }
     }
 
-    private string CreateNotification()
+    private List<string> CreateNotifications()
     {
-        Meeting notifMeeting = meetings.Where(meetings => meetings.Notification > 0)
-            .FirstOrDefault(meetings => (meetings.StartTime - DateTime.Now).TotalMinutes < meetings.Notification);
-        if (notifMeeting == null)
-            return "";
-        
-        string notification = notifMeeting.StartTime.ToString("HH:mm") + " - " + notifMeeting.EndTime.ToString("HH:mm");
-        return notification;
+        var notifications = new List<string>();
+        var upcomingMeetings = meetings
+            .Where(meeting => meeting.Notification > 0 &&
+                              (meeting.StartTime - DateTime.Now).TotalMinutes <= meeting.Notification &&
+                              (meeting.StartTime - DateTime.Now).TotalMinutes > 0)
+            .ToList();
+
+        foreach (var meeting in upcomingMeetings)
+        {
+            notifications.Add($"{meeting.StartTime.ToString("HH:mm")} - {meeting.EndTime.ToString("HH:mm")}");
+        }
+
+        return notifications;
     }
 
 }

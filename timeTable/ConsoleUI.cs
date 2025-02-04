@@ -338,7 +338,7 @@ public class DeleteMeetingOption : MenuOption
         {
             schedule.DeleteMeeting(id);
             ConsoleHelper.ShowMessage("Удаление успешно.");
-            MeetingHelper.ListMeetings(schedule, chosenDate);
+            MeetingHelper.ListMeetings(schedule, chosenDate); // Обновляем список встреч
         }
         else if (input.Equals("Нет", StringComparison.OrdinalIgnoreCase))
         {
@@ -390,7 +390,7 @@ public static class MeetingHelper
             Console.WriteLine($"{i}: {meeting.StartTime} - {meeting.EndTime}");
         }
 
-        Console.WriteLine("\nВведите номер встречи для выбора или 'М' для возврата в главное меню:");
+        Console.WriteLine("\nВведите номер встречи для выбора, 'М' для возврата в главное меню или 'Э' для экспорта встреч:");
         Console.Write(">>");
 
         var input = Console.ReadLine();
@@ -406,6 +406,13 @@ public static class MeetingHelper
             menuManager.Run();
             return;
         }
+        else if (input.Equals("Э", StringComparison.OrdinalIgnoreCase))
+        {
+            ExportMeetingsToFile(meetingsWithIndices, chosenDate);
+            ConsoleHelper.ShowMessage("Экспорт завершен. Нажмите любую клавишу для продолжения.");
+            ListMeetings(schedule, chosenDate); // Возвращаемся к списку встреч
+            return;
+        }
 
         if (int.TryParse(input, out int id) && id >= 0 && id < meetingsWithIndices.Count)
         {
@@ -417,6 +424,26 @@ public static class MeetingHelper
             Console.WriteLine("Неверный ввод, попробуйте снова.");
             Thread.Sleep(3000);
             ListMeetings(schedule, chosenDate);
+        }
+    }
+    
+    private static void ExportMeetingsToFile(List<(Meeting Meeting, int Index)> meetings, DateOnly chosenDate)
+    {
+        string filePath = $"meetings_{chosenDate}.txt";
+        try
+        {
+            using (StreamWriter writer = new StreamWriter(filePath))
+            {
+                writer.WriteLine($"Встречи за {chosenDate}:");
+                foreach (var (meeting, _) in meetings)
+                {
+                    writer.WriteLine($"- {meeting.StartTime} - {meeting.EndTime}. Уведомление за: {meeting.Notification} минут");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            ConsoleHelper.ShowMessage($"Ошибка при экспорте встреч: {ex.Message}");
         }
     }
 }
