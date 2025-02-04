@@ -1,8 +1,19 @@
+using Timer = System.Timers.Timer;
+using System.Timers;
 namespace timeTable;
+
 
 public class Schedule
 {
     private List<Meeting> meetings = new List<Meeting>();
+    
+    private Timer timer = new Timer(60000);
+
+    public Schedule()
+    {
+        timer.Elapsed += CheckNotification;
+        timer.Start();
+    }
 
     public bool AddMeeting(Meeting bufferMeeting)
     {
@@ -43,4 +54,21 @@ public class Schedule
     {
         meetings.RemoveAt(id);
     }
+
+    private void CheckNotification(object? sender, ElapsedEventArgs elapsedEventArgs)
+    {
+        
+    }
+
+    private string CreateNotification()
+    {
+        Meeting notifMeeting = meetings.Where(meetings => meetings.Notification > 0)
+            .FirstOrDefault(meetings => (meetings.StartTime - DateTime.Now).TotalMinutes < meetings.Notification);
+        if (notifMeeting == null)
+            return "";
+        
+        string notification = notifMeeting.StartTime.ToString("HH:mm") + " - " + notifMeeting.EndTime.ToString("HH:mm");
+        return notification;
+    }
+
 }

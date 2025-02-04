@@ -1,11 +1,11 @@
-﻿using System;
-using timeTable;
+﻿using timeTable;
 
 class Program
 {
-    static Schedule schedule = new Schedule();
+    
     public static void Main(string[] args)
     {
+        Schedule schedule = new Schedule();
         new ConsoleUI(schedule).MainMenuUI();
     }
 }

@@ -2,7 +2,7 @@ namespace timeTable;
 
 public class ConsoleUI (Schedule schedule)
 {
-    public void PressAnyKey()
+    private void PressAnyKey()
     {
         Console.WriteLine("Нажмите любую клавишу для продолжения");
         Console.Write(">>");
@@ -26,12 +26,12 @@ public class ConsoleUI (Schedule schedule)
                 case ConsoleKey.D1:
                     if (schedule.AddMeeting(DateTimeMeetingUI()))
                     {
-                        CreationSuccess();
+                        ShowMessage("Встреча успешно добавлена");
                         MainMenuUI();
                     }
                     else
                     {
-                        CreationError();
+                        ShowMessage("На это время назначена другая встреча. Новая встреча не была создана");
                         MainMenuUI();
                     }
                     break;
@@ -53,7 +53,7 @@ public class ConsoleUI (Schedule schedule)
         
     }
 
-    public Meeting DateTimeMeetingUI()
+    private Meeting DateTimeMeetingUI()
     {
         DateTime startTime;
         DateTime endTime;
@@ -77,7 +77,8 @@ public class ConsoleUI (Schedule schedule)
             Console.WriteLine("в формате дд.мм.гггг чч:мм");
             Console.Write(">>");
             if (DateTime.TryParse(Console.ReadLine(), out endTime))
-                break;
+                if (endTime > startTime)
+                    break;
             
             Console.WriteLine("Неправильно введена дата, попробуйте снова.");
             PressAnyKey();
@@ -111,36 +112,15 @@ public class ConsoleUI (Schedule schedule)
             }
         }
     }
-
-    public void CreationError()
+    
+    private void ShowMessage(string message)
     {
         Console.Clear();
-        Console.WriteLine("На это время назначена другая встреча. Новая встреча не была создана.");
+        Console.WriteLine(message);
         PressAnyKey();
     }
-
-    public void CreationSuccess()
-    {
-        Console.Clear();
-        Console.WriteLine("Встреча успешно добавлена");
-        PressAnyKey();
-    }
-
-    public void CorrectionError()
-    {
-        Console.Clear();
-        Console.WriteLine("На это время назначена другая встреча. Встреча не была изменена.");
-        PressAnyKey();
-    }
-
-    public void CorrectionSuccess()
-    {
-        Console.Clear();
-        Console.WriteLine("Встреча была успешно изменена");
-        PressAnyKey();
-    }
-
-    public void ConfirmDeletion(int id, DateOnly choosenDate, Meeting meeting)
+    
+    private void ConfirmDeletion(int id, DateOnly chosenDate, Meeting meeting)
     {
         Console.Clear();
         Console.WriteLine("Вы уверены что хотите удалить эту встречу?");
@@ -151,43 +131,62 @@ public class ConsoleUI (Schedule schedule)
         {
             case "Да":
                 schedule.DeleteMeeting(id);
-                Console.WriteLine("Удаление успешно.");
-                PressAnyKey();
-                ListMeetings(choosenDate);
+                ShowMessage("Удаление успешно.");
+                ListMeetings(chosenDate);
                 break;
             case "Нет":
-                MeetingOptions(meeting, choosenDate, id);
+                MeetingOptions(meeting, chosenDate, id);
                 break;
             default:
                 Console.WriteLine("Неверный ввод, попробуйте снова");
                 Thread.Sleep(3000);
-                ConfirmDeletion(id, choosenDate, meeting);
+                ConfirmDeletion(id, chosenDate, meeting);
                 break;
         }
     }
 
-    public void ChooseDate()
+    private void ChooseDate()
     {
+        DateOnly chosenDate;
         Console.Clear();
         Console.WriteLine("Введите дату, за которую нужно вывести все встречи");
-        if (DateOnly.TryParse(Console.ReadLine(), out DateOnly choosenDate))
-            ListMeetings(choosenDate);
-        else
+        Console.WriteLine("Или введите 1 для выбора сегодняшней даты");
+        Console.WriteLine("Введите Н(азад) для возврата в главное меню");
+        Console.Write(">>");
+        
+        var input = Console.ReadLine();
+        while (true)
         {
-            Console.WriteLine("Неправильно введена дата, попробуйте снова");
-            Thread.Sleep(3000);
-            ChooseDate();
+            switch (input)
+            {
+                case "1":
+                    chosenDate  = DateOnly.FromDateTime(DateTime.Now);
+                    ListMeetings(chosenDate);
+                    break;
+                case "Н":
+                    MainMenuUI();
+                    break;
+                default:
+                    if (DateOnly.TryParse(Console.ReadLine(), out chosenDate))
+                    {
+                        ListMeetings(chosenDate);
+                        break;
+                    }
+                    Console.WriteLine("Неправильно введена дата, попробуйте снова");
+                    Thread.Sleep(3000);
+                    continue;
+            }
         }
     }
 
-    public void ListMeetings(DateOnly choosenDate)
+    private void ListMeetings(DateOnly chosenDate)
     {
         Console.Clear();
         Console.WriteLine("Выберите номер встречи, введя её номер");
         Console.WriteLine("Для выбора другой даты, введите Д(ата)");
         Console.WriteLine("Для возвращения в главное меню, введите М(еню)");
         int i = 0;
-        foreach (var meeting in schedule.GetMeetings(choosenDate))
+        foreach (var meeting in schedule.GetMeetings(chosenDate))
         {
             Console.WriteLine($"{i++}: {meeting.StartTime} - {meeting.EndTime}. Уведомление за: {meeting.Notification} минут");
         }
@@ -206,18 +205,18 @@ public class ConsoleUI (Schedule schedule)
                 if (int.TryParse(input, out i))
                 {
                     var choosenMeeting = schedule.GetMeeting(i);
-                    MeetingOptions(choosenMeeting, choosenDate, i);
+                    MeetingOptions(choosenMeeting, chosenDate, i);
                     break;
                 }
                 
                 Console.WriteLine("Такой опции нет. Попробуйте снова");
                 PressAnyKey();
-                ListMeetings(choosenDate);
+                ListMeetings(chosenDate);
                 break;
         }
     }
 
-    public void MeetingOptions(Meeting meeting, DateOnly choosenDate, int id)
+    private void MeetingOptions(Meeting meeting, DateOnly chosenDate, int id)
     {
         Console.Clear();
         Console.WriteLine($"Начало встречи:{meeting.StartTime}");
@@ -236,22 +235,22 @@ public class ConsoleUI (Schedule schedule)
             case ConsoleKey.D1:
                 if (schedule.CorrectMeeting(DateTimeMeetingUI(), id))
                 {
-                    CorrectionSuccess();
-                    ListMeetings(choosenDate);
+                    ShowMessage("Встреча была успешно изменена");
+                    ListMeetings(chosenDate);
                 }
                 else
                 {
-                    CorrectionError();
-                    MeetingOptions(meeting, choosenDate, id);
+                    ShowMessage("На это время назначена другая встреча. Встреча не была изменена");
+                    MeetingOptions(meeting, chosenDate, id);
                 }
                 break;
             
             case ConsoleKey.D5:
-                ConfirmDeletion(id, choosenDate, meeting);
+                ConfirmDeletion(id, chosenDate, meeting);
                 break;
             
             case ConsoleKey.D8:
-                ListMeetings(choosenDate);
+                ListMeetings(chosenDate);
                 break;
             
             case ConsoleKey.D9:
@@ -261,9 +260,14 @@ public class ConsoleUI (Schedule schedule)
             default:
                 Console.WriteLine("Такой опции нет. Попробуйте снова");
                 PressAnyKey();
-                MeetingOptions(meeting, choosenDate, id);
+                MeetingOptions(meeting, chosenDate, id);
                 break;
         }
     }
-    
+
+    public void Notification(string notification)
+    {
+        Console.Beep();
+        Console.WriteLine();
+    }
 }
