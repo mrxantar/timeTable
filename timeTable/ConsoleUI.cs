@@ -328,27 +328,31 @@ public class DeleteMeetingOption : MenuOption
 
     private void ConfirmDeletion(int id, DateOnly chosenDate, Meeting meeting)
     {
-        Console.Clear();
-        Console.WriteLine("Вы уверены что хотите удалить эту встречу?");
-        Console.WriteLine("Введите Да/Нет");
-        Console.Write(">>");
+        while (true)
+        {
+            Console.Clear();
+            Console.WriteLine("Вы уверены что хотите удалить эту встречу?");
+            Console.WriteLine("Введите Да/Нет");
+            Console.Write(">>");
 
-        var input = Console.ReadLine();
-        if (input.Equals("Да", StringComparison.OrdinalIgnoreCase))
-        {
-            schedule.DeleteMeeting(id);
-            ConsoleHelper.ShowMessage("Удаление успешно.");
-            MeetingHelper.ListMeetings(schedule, chosenDate); // Обновляем список встреч
-        }
-        else if (input.Equals("Нет", StringComparison.OrdinalIgnoreCase))
-        {
-            new MeetingMenuOption(schedule, meeting, chosenDate, id).Execute();
-        }
-        else
-        {
-            Console.WriteLine("Неверный ввод, попробуйте снова");
-            Thread.Sleep(3000);
-            ConfirmDeletion(id, chosenDate, meeting);
+            var input = Console.ReadLine();
+            if (input.Equals("Да", StringComparison.OrdinalIgnoreCase))
+            {
+                schedule.DeleteMeeting(id);
+                ConsoleHelper.ShowMessage("Удаление успешно.");
+                MeetingHelper.ListMeetings(schedule, chosenDate);
+                return;
+            }
+            else if (input.Equals("Нет", StringComparison.OrdinalIgnoreCase))
+            {
+                new MeetingMenuOption(schedule, meeting, chosenDate, id).Execute();
+                return;
+            }
+            else
+            {
+                Console.WriteLine("Неверный ввод, попробуйте снова");
+                Thread.Sleep(3000);
+            }
         }
     }
 }
@@ -375,55 +379,57 @@ public static class MeetingHelper
 {
     public static void ListMeetings(Schedule schedule, DateOnly chosenDate)
     {
-        var meetingsWithIndices = schedule.GetMeetings(chosenDate);
-        if (meetingsWithIndices.Count == 0)
+        while (true)
         {
-            ConsoleHelper.ShowMessage("На эту дату нет запланированных встреч.");
-            return;
-        }
-
-        Console.Clear();
-        Console.WriteLine("Список встреч:");
-        for (int i = 0; i < meetingsWithIndices.Count; i++)
-        {
-            var (meeting, _) = meetingsWithIndices[i];
-            Console.WriteLine($"{i}: {meeting.StartTime} - {meeting.EndTime}");
-        }
-
-        Console.WriteLine("\nВведите номер встречи для выбора, 'М' для возврата в главное меню или 'Э' для экспорта встреч:");
-        Console.Write(">>");
-
-        var input = Console.ReadLine();
-        if (input.Equals("М", StringComparison.OrdinalIgnoreCase))
-        {
-            var mainMenuOptions = new List<MenuOption>
+            var meetingsWithIndices = schedule.GetMeetings(chosenDate);
+            if (meetingsWithIndices.Count == 0)
             {
-                new CreateMeetingOption(schedule),
-                new ViewMeetingsOption(schedule),
-                new ExitOption()
-            };
-            var menuManager = new MenuManager(mainMenuOptions);
-            menuManager.Run();
-            return;
-        }
-        else if (input.Equals("Э", StringComparison.OrdinalIgnoreCase))
-        {
-            ExportMeetingsToFile(meetingsWithIndices, chosenDate);
-            ConsoleHelper.ShowMessage("Экспорт завершен. Нажмите любую клавишу для продолжения.");
-            ListMeetings(schedule, chosenDate); // Возвращаемся к списку встреч
-            return;
-        }
+                ConsoleHelper.ShowMessage("На эту дату нет запланированных встреч.");
+                return;
+            }
 
-        if (int.TryParse(input, out int id) && id >= 0 && id < meetingsWithIndices.Count)
-        {
-            var (selectedMeeting, originalIndex) = meetingsWithIndices[id];
-            new MeetingMenuOption(schedule, selectedMeeting, chosenDate, originalIndex).Execute();
-        }
-        else
-        {
-            Console.WriteLine("Неверный ввод, попробуйте снова.");
-            Thread.Sleep(3000);
-            ListMeetings(schedule, chosenDate);
+            Console.Clear();
+            Console.WriteLine("Список встреч:");
+            for (int i = 0; i < meetingsWithIndices.Count; i++)
+            {
+                var (meeting, _) = meetingsWithIndices[i];
+                Console.WriteLine($"{i}: {meeting.StartTime} - {meeting.EndTime}");
+            }
+
+            Console.WriteLine("\nВведите номер встречи для выбора, 'М' для возврата в главное меню или 'Э' для экспорта встреч:");
+            Console.Write(">>");
+
+            var input = Console.ReadLine();
+            if (input.Equals("М", StringComparison.OrdinalIgnoreCase))
+            {
+                var mainMenuOptions = new List<MenuOption>
+                {
+                    new CreateMeetingOption(schedule),
+                    new ViewMeetingsOption(schedule),
+                    new ExitOption()
+                };
+                var menuManager = new MenuManager(mainMenuOptions);
+                menuManager.Run();
+                return;
+            }
+            else if (input.Equals("Э", StringComparison.OrdinalIgnoreCase))
+            {
+                ExportMeetingsToFile(meetingsWithIndices, chosenDate);
+                ConsoleHelper.ShowMessage("Экспорт завершен. Нажмите любую клавишу для продолжения.");
+                continue;
+            }
+
+            if (int.TryParse(input, out int id) && id >= 0 && id < meetingsWithIndices.Count)
+            {
+                var (selectedMeeting, originalIndex) = meetingsWithIndices[id];
+                new MeetingMenuOption(schedule, selectedMeeting, chosenDate, originalIndex).Execute();
+                return;
+            }
+            else
+            {
+                Console.WriteLine("Неверный ввод, попробуйте снова.");
+                Thread.Sleep(3000);
+            }
         }
     }
     
